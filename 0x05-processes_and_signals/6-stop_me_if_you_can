@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# stops the file(4-to_infinity_and_beyond) process without usin ctrl+c or kill or killall
+
+pkill -f 4-to_infinity_and_beyond
