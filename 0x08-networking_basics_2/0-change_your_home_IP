@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#configures an Ubuntu server
+
+cp /etc/hosts ~/hosts.new
+echo -e "127.0.0.2\tlocalhost\n8.8.8.8\tfacebook.com" >> ~/hosts.new
+# alternatively=>sed -i -e "\$a127.0.0.2\tlocalhost\n8.8.8.8\tfacebook.com" ~/hosts.new
+cp -f ~/hosts.new /etc/hosts
