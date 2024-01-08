@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#  configure web-02 to be identical to web-01
+# so that its HTTP response contains a custom header
+# The name of the custom HTTP header must be X-Served-By
+# value of custom HTTP header must be hostname server Nginx running on
+# it configures a brand new Ubuntu machine 
+
+# Update package list
+sudo apt update
+
+# Install Nginx
+sudo apt install -y nginx
+
+# replace text in index.html with "Hello World!"
+echo "Hello World!" | sudo tee /var/www/html/index.html > /dev/null
+
+path_to_file="/etc/nginx/sites-available/default"
+string_to_find='server_name _;'
+
+# redirect server(/redirect me) to another page permanently
+string_to_append='\\n\tlocation /redirect_me {\n\t\treturn 301 https://www.google.com;\n\t}'
+nginx_redirect="location /redirect_me {
+    return 301 https://www.google.com;
+}"
+
+if ! grep -q "$nginx_redirect" "$path_to_file"; then
+	sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
+fi
+
+# set custom 404 message
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html > /dev/null
+string_to_append='\\n\terror_page 404 /404.html;\n\tlocation  /404.html {\n\t\tinternal;\n\t}'
+nginx_404="error_page 404 /404.html;"
+
+# add custom HTTP header
+if [ -n "$1" ]; then
+	hostname=$1
+	string_to_append="\\\n\tadd_header X-Served-By $hostname;"
+	nginx_custom_header="add_header X-Served-By"
+	if ! grep -q "$nginx_custom_header" "$path_to_file"; then
+		sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
+	fi
+fi
+
+if ! grep -q "$nginx_404" "$path_to_file"; then
+	sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
+fi
+
+# Restart Nginx (without using systemctl)
+sudo service nginx restart
