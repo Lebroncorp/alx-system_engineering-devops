@@ -5,46 +5,34 @@
 # value of custom HTTP header must be hostname server Nginx running on
 # it configures a brand new Ubuntu machine 
 
-# Update package list
-sudo apt update
+sudo apt-get -y update
+sudo apt-get -y install nginx
+sudo ufw allow 'Nginx HTTP'
+sudo mkdir -p /var/www/html /var/www/error
+sudo chmod -R 755 /var/www
+echo 'Hello World!' > /var/www/html/index.html
+echo "Ceci n'est pas une page" > /var/www/html/404.html
 
-# Install Nginx
-sudo apt install -y nginx
-
-# replace text in index.html with "Hello World!"
-echo "Hello World!" | sudo tee /var/www/html/index.html > /dev/null
-
-path_to_file="/etc/nginx/sites-available/default"
-string_to_find='server_name _;'
-
-# redirect server(/redirect me) to another page permanently
-string_to_append='\\n\tlocation /redirect_me {\n\t\treturn 301 https://www.google.com;\n\t}'
-nginx_redirect="location /redirect_me {
-    return 301 https://www.google.com;
+server_config=\
+"server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	root /var/www/html;
+	index index.html index.htm index.nginx-debian.html;
+	server_name _;
+	add_header X-Served-By \$hostname;
+	location / {
+		try_files \$uri \$uri/ =404;
+	}
+	if (\$request_filename ~ redirect_me){
+		rewrite ^ https://youtube.com permanent;
+	}
+	error_page 404 /404.html;
+	location = /404.html {
+		internal;
+	}
 }"
 
-if ! grep -q "$nginx_redirect" "$path_to_file"; then
-	sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
-fi
+echo "$server_config" > /etc/nginx/sites-enabled/default
 
-# set custom 404 message
-echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html > /dev/null
-string_to_append='\\n\terror_page 404 /404.html;\n\tlocation  /404.html {\n\t\tinternal;\n\t}'
-nginx_404="error_page 404 /404.html;"
-
-# add custom HTTP header
-if [ -n "$1" ]; then
-	hostname=$1
-	string_to_append="\\\n\tadd_header X-Served-By $hostname;"
-	nginx_custom_header="add_header X-Served-By"
-	if ! grep -q "$nginx_custom_header" "$path_to_file"; then
-		sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
-	fi
-fi
-
-if ! grep -q "$nginx_404" "$path_to_file"; then
-	sed -i "/$string_to_find/a$string_to_append" /etc/nginx/sites-available/default
-fi
-
-# Restart Nginx (without using systemctl)
 sudo service nginx restart
