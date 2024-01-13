@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # script that will display information about subdomains.
 
 subdomains_all=( "www" "lb-01" "web-01" "web-02" )
