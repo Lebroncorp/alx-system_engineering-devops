@@ -16,4 +16,4 @@ def number_of_subscribers(subreddit):
 v1.0.0 (by /u/lebroncorp_tech_jr)'}).json()
 
     subs = r.get("data", {}).get("subscribers", 0)
-    return sub
+    return subs
