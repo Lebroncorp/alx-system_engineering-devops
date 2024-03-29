@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""Contains recurse function"""
+"""
+recursive function that returns a list
+"""
 import requests
 
 
@@ -8,14 +10,14 @@ def recurse(subreddit, hot_list=[], after="", count=0):
     url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
     headers = {
         "User-Agent": "0x16-api_advanced:project:\
-v1.0.0 (by /u/newman_tech_jr)"
+v1.0.0 (by /u/lebroncorp_tech_jr)"
     }
-    params = {
+    title = {
         "after": after,
         "count": count,
         "limit": 100
     }
-    response = requests.get(url, headers=headers, params=params,
+    response = requests.get(url, headers=headers, title=title,
                             allow_redirects=False)
     if response.status_code == 404:
         return None
@@ -23,6 +25,7 @@ v1.0.0 (by /u/newman_tech_jr)"
     results = response.json().get("data")
     after = results.get("after")
     count += results.get("dist")
+
     for c in results.get("children"):
         hot_list.append(c.get("data").get("title"))
 
